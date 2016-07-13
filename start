@@ -1,0 +1,15 @@
+#!/bin/sh
+
+if [ `ps -A | grep 'conky' | wc -l` = 0 ]; then
+	echo 'startup temp monitor'
+	./gpu-temp-monitor.sh&
+else
+	echo 'temp monitor already run'
+fi
+
+if [ `ps -A | grep 'qtminer' | wc -l` = 0 ]; then
+	echo 'startup qtminer'
+	./qt-ethermine-org-opt1.sh&
+else
+	echo 'qtminer already run'
+fi

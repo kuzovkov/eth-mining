@@ -1,0 +1,21 @@
+#!/bin/sh
+
+while [ `ps -A | grep 'ethminer' | wc -l` != 0 ]
+do
+	killall ethminer
+done
+
+while [ `ps -A | grep 'geth' | wc -l` != 0 ]
+do
+	killall geth
+done
+
+while [ `ps -A | grep 'conky' | wc -l` != 0 ]
+do
+        killall conky
+done
+
+while [ `ps -A | grep 'qtminer' | wc -l` != 0 ]
+do
+        killall qtminer
+done
