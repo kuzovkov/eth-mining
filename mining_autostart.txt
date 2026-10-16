@@ -1,0 +1,298 @@
+Автозапуск майнинга
+
+###########################################################
+/etc/init.d/mining:
+-------------------------------------------------
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          mining
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Run mining
+# Description:       Run mining sevice
+#
+### END INIT INFO
+
+# Author: Foo Bar <kuzovkov2011@rambler.ru>
+#
+# Please remove the "Author" lines above and replace them
+# with your own name if you copy and modify this script.
+
+# Do NOT "set -e"
+
+# PATH should only include /usr/* if it runs after the mountnfs.sh script
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+DESC="Mining"
+NAME=mining
+DAEMON=/usr/sbin/$NAME
+DAEMON_ARGS="--options args"
+PIDFILE=/var/run/$NAME.pid
+SCRIPTNAME=/etc/init.d/$NAME
+
+# Exit if the package is not installed
+#[ -x "$DAEMON" ] || exit 0
+
+# Read configuration variable file if it is present
+#[ -r /etc/default/$NAME ] && . /etc/default/$NAME
+
+# Load the VERBOSE setting and other rcS variables
+. /lib/init/vars.sh
+
+# Define LSB log_* functions.
+# Depend on lsb-base (>= 3.2-14) to ensure that this file is present
+# and status_of_proc is working.
+. /lib/lsb/init-functions
+
+#
+# Function that starts the daemon/service
+#
+do_start()
+{
+        # Return
+        #   0 if daemon has been started
+        #   2 if daemon could not be started
+        #start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON --test > /dev/null \
+        #       || return 1
+        #start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON -- \
+        #       $DAEMON_ARGS \
+        #       || return 2
+        # Add code here, if necessary, that waits for the process to be ready
+        # to handle requests from services started subsequently which depend
+        # on this one.  As a last resort, sleep for some time.
+        log_daemon_msg "Starting mining..."
+        /home/user1/Ethereum-mining/auto-start.sh 2>&1 | /usr/bin/logger -p user.info &
+        /home/user1/Zcash/start 2>&1 | /usr/bin/logger -p user.info &
+        #/home/user1/Zcash/start-gpu 2>&1 | /usr/bin/logger -p user.info
+        log_end_msg 0
+        return 0
+}
+
+#
+# Function that stops the daemon/service
+#
+do_stop()
+{
+        # Return
+        #   0 if daemon has been stopped
+        #   1 if daemon was already stopped
+        #   2 if daemon could not be stopped
+        #   other if a failure occurred
+        #start-stop-daemon --stop --quiet --retry=TERM/30/KILL/5 --pidfile $PIDFILE --name $NAME
+        #RETVAL="$?"
+        #[ "$RETVAL" = 2 ] && return 2
+        # Wait for children to finish too if this is a daemon that forks
+        # and if the daemon is only ever run from this initscript.
+        # If the above conditions are not satisfied then add some other code
+        # that waits for the process to drop all resources that could be
+        # needed by services started subsequently.  A last resort is to
+        # sleep for some time.
+        #start-stop-daemon --stop --quiet --oknodo --retry=0/30/KILL/5 --exec $DAEMON
+        #[ "$?" = 2 ] && return 2
+        # Many daemons don't delete their pidfiles when they exit.
+        #rm -f $PIDFILE
+        #return "$RETVAL"
+
+        log_daemon_msg "Stopping mining..."
+        /home/user1/Ethereum-mining/stop
+        /home/user1/Zcash/stop
+        #/home/user1/Zcash/stop-gpu
+        log_end_msg 0
+        return 0
+}
+
+#
+# Function that sends a SIGHUP to the daemon/service
+#
+do_reload() {
+        #
+        # If the daemon can reload its configuration without
+        # restarting (for example, when it is sent a SIGHUP),
+        # then implement that here.
+        #
+        #start-stop-daemon --stop --signal 1 --quiet --pidfile $PIDFILE --name $NAME
+        #return 0
+        do_stop
+        sleep 2
+        do_start
+        return 0
+}
+
+case "$1" in
+  start)
+        #[ "$VERBOSE" != no ] && log_daemon_msg "Starting $DESC" "$NAME"
+        do_start
+        #case "$?" in
+        #       0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+        #       2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+        #esac
+        ;;
+  stop)
+        #[ "$VERBOSE" != no ] && log_daemon_msg "Stopping $DESC" "$NAME"
+        do_stop
+        #case "$?" in
+        #       0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+        #       2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+        #esac
+#       ;;
+  #status)
+#       status_of_proc "$DAEMON" "$NAME" && exit 0 || exit $?
+        ;;
+  #reload|force-reload)
+        #
+        # If do_reload() is not implemented then leave this commented out
+        # and leave 'force-reload' as an alias for 'restart'.
+        #
+        #log_daemon_msg "Reloading $DESC" "$NAME"
+        #do_reload
+        #log_end_msg $?
+        #;;
+  restart|force-reload)
+        #
+        # If the "reload" option is implemented then remove the
+       # 'force-reload' alias
+        #
+        #log_daemon_msg "Restarting $DESC" "$NAME"
+        do_reload
+        #case "$?" in
+        #  0|1)
+        #       do_start
+        #       case "$?" in
+        #               0) log_end_msg 0 ;;
+        #               1) log_end_msg 1 ;; # Old process is still running
+        #               *) log_end_msg 1 ;; # Failed to start
+        #       esac
+        #       ;;
+        #  *)
+        #       # Failed to stop
+        #       log_end_msg 1
+        #       ;;
+        #esac
+        ;;
+  *)
+        #echo "Usage: $SCRIPTNAME {start|stop|restart|reload|force-reload}" >&2
+        echo "Usage: $SCRIPTNAME {start|stop|status|restart|force-reload}" >&2
+        exit 3
+        ;;
+esac
+
+:
+----------------------------------------------------------
+
+sudo chmod a+x /etc/init.d/mining
+sudo update-rc.d mining start 99 2 3 4 5 . stop 01 0 1 6 .
+----------------------------------------------------------
+
+
+Ethereum or Ethereum-classic mining
+#############################################################
+/home/user1/Ethereum-mining/auto-start.sh:
+----------------------------------------------------------------
+#!/bin/sh
+
+if [ `ps -A | grep 'qtminer' | wc -l` = 0 ]; then
+	echo 'startup qtminer'
+	#/home/user1/Ethereum-mining/qt-ethermine-org-opt1.sh&
+	/home/user1/Ethereum-mining/qt-ethermine-org-opt1-classic.sh&
+else
+	echo 'qtminer already run'
+fi
+-----------------------------------------------------------------
+
+##########################################################
+/home/user1/Ethereum-mining/qt-ethermine-org-opt1-classic.sh:
+------------------------------------------------------------
+#!/bin/sh
+
+cd /home/user1/Ethereum-mining/qtminer2
+./qtminer.sh -s eu1-etc.ethermine.org:4444 -u 0xc819b53fd2b3a95bbec0bfd4333fb2e9dd63219c.rig1 -G --cl-global-work 16384 --cl-local-work 256
+------------------------------------------------------------------
+
+################################################################
+Ethereum-mining/qt-ethermine-org-opt1.sh 
+---------------------------------------------------------------
+#!/bin/sh
+
+cd /home/user1/Ethereum-mining/qtminer2
+./qtminer.sh -s eu2.ethermine.org:4444 -u 0xfe958918122ac0ef253341667f6f23a03fb2b33a.rig1 -G --cl-global-work 16384 --cl-local-work 256
+-----------------------------------------------------------------------------------------------------------
+
+
+Zcash mining
+###############################################################
+/home/user1/Zcash/start:
+--------------------------------------------------------------
+#!/bin/sh
+
+if [ `ps -A | grep 'nheqminer' | wc -l` = 0 ]; then
+	echo 'startup nheqminer'
+	/home/user1/Zcash/start_mining.sh&
+else
+	echo 'nheqminer already run'
+fi
+------------------------------------------------------------
+
+-
+
+##############################################################
+/home/user1/Zcash/start_mining.sh:
+-------------------------------------------------------------
+#!/bin/sh
+
+cd /home/user1/Zcash/nheqminer/nheqminer/build
+./nheqminer -l eu1-zcash.flypool.org:3333 -u t1XUjd5LZ3cxh41xUJfGvxq3HdUwirpMRxL.worker1 -t 6
+----------------------------------------------------------------------------------------------
+
+#############################################
+/home/user1/Zcash/start-gpu:
+---------------------------------------------
+#!/bin/sh
+
+if [ `ps -A | grep 'silentarmy' | wc -l` = 0 ]; then
+	echo 'startup silentarmy'
+	/home/user1/Zcash/start_mining_gpu.sh&
+else
+	echo 'silentarmy already run'
+fi
+-----------------------------------------------------
+
+##################################################
+/home/user1/Zcash/start_mining_gpu.sh:
+--------------------------------------------------
+#!/bin/sh
+
+cd /home/user1/Zcash/silentarmy
+./silentarmy -v --use 0,1,2,3 -c stratum+tcp://eu1-zcash.flypool.org:3333 -u t1XUjd5LZ3cxh41xUJfGvxq3HdUwirpMRxL.worker1
+--------------------------------------------------
+
+
+
+Настройка логгирования и ротации лог-файлов
+########################################################
+/etc/rsyslog.d/mining.conf:
+------------------------------------------------------
+user.info	/var/log/mining.log
+######################################################
+/etc/logrotate.d/mining:
+-----------------------------------------------
+/var/log/mining.log
+{
+	rotate 4
+	daily
+	missingok
+	notifempty
+	delaycompress
+	compress
+	postrotate
+		reload rsyslog >/dev/null 2>&1 || true
+	endscript
+}
+-----------------------------------------------------------
+
+
+
+              
+
+
+
